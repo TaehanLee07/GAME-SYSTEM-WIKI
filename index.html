@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>턴제 전투 시스템 튜토리얼</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover, .nav-tab.active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .content-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #2d3748;
+            margin: 25px 0 15px 0;
+            font-size: 1.3em;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .timing-bar {
+            background: #e2e8f0;
+            height: 30px;
+            border-radius: 15px;
+            position: relative;
+            margin: 15px 0;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .timing-section {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .timing-fast {
+            background: linear-gradient(135deg, #f56565, #e53e3e) !important;
+            width: 33%;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .timing-balance {
+            background: linear-gradient(135deg, #48bb78, #38a169) !important;
+            width: 33%;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .timing-power {
+            background: linear-gradient(135deg, #9f7aea, #805ad5) !important;
+            width: 34%;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .battle-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            max-width: 420px;
+            margin: 20px auto;
+            background: #1a202c;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #4a5568;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: #f7fafc;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .ally {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
+        }
+
+        .enemy {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+            box-shadow: 0 2px 4px rgba(245, 101, 101, 0.3);
+        }
+
+        .neutral {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .zoc-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            max-width: 200px;
+            margin: 10px auto;
+            background: #2d3748;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .zoc-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .zoc-controlled {
+            background: #48bb78;
+            color: white;
+        }
+
+        .zoc-unit {
+            background: #4299e1;
+            color: white;
+        }
+
+        .zoc-empty {
+            background: #e2e8f0;
+        }
+
+        .attribute-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .attribute-card {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+
+        .attribute-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .fire { color: #f56565; }
+        .water { color: #4299e1; }
+        .energy { color: #38b2ac; }
+        .earth { color: #68d391; }
+        .thunder { color: #9f7aea; }
+        .dark { color: #2d3748; }
+        .light { color: #fbd38d; }
+        .force { color: #fc8181; }
+        .connection { color: #ed8936; }
+
+        .status-effects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .status-card {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid;
+        }
+
+        .debuff { border-left-color: #f56565; }
+        .buff { border-left-color: #48bb78; }
+        .special { border-left-color: #9f7aea; }
+
+        .formation-display {
+            background: #2d3748;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .formation-row {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .front-row { background: #4299e1; }
+        .mid-row { background: #48bb78; }
+        .back-row { background: #f56565; }
+
+        .example-box {
+            background: #f0fff4;
+            border: 2px solid #48bb78;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .warning-box {
+            background: #fffaf0;
+            border: 2px solid #ed8936;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .nav-tab {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+
+            .content-section {
+                padding: 20px;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .attribute-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .status-effects {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .battle-grid {
+                max-width: 320px;
+                padding: 12px;
+            }
+
+            .grid-cell {
+                font-size: 1em;
+            }
+
+            .zoc-grid {
+                max-width: 150px;
+                padding: 6px;
+            }
+
+            .zoc-cell {
+                font-size: 0.7em;
+            }
+
+            .formation-display {
+                padding: 15px;
+            }
+
+            .formation-row {
+                padding: 8px;
+                font-size: 0.9em;
+                flex-direction: column;
+                text-align: center;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 턴제 전투 시스템 가이드</h1>
+            <p>"모든 공격은 충돌이며, 포지셔닝이 충돌의 결과를 결정한다"</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('timing')">⏱️ 타이밍 시스템</button>
+            <button class="nav-tab" onclick="showSection('collision')">⚔️ 충돌 시스템</button>
+            <button class="nav-tab" onclick="showSection('speed')">🏃 속도 & 이동</button>
+            <button class="nav-tab" onclick="showSection('zoc')">🛡️ 통제권 (ZoC)</button>
+            <button class="nav-tab" onclick="showSection('attributes')">🔥 9속성 시스템</button>
+            <button class="nav-tab" onclick="showSection('status')">💫 상태이상</button>
+            <button class="nav-tab" onclick="showSection('formation')">📐 진형 & 포지션</button>
+            <button class="nav-tab" onclick="showSection('examples')">🎯 실전 예시</button>
+        </div>
+
+        <!-- 타이밍 시스템 -->
+        <div id="timing" class="content-section active">
+            <h2>⏱️ 타이밍 시스템이란?</h2>
+            
+            <div class="highlight-box">
+                <h3>핵심 개념</h3>
+                <p><strong>타이밍 = 위력 결정 방식</strong></p>
+                <p>0~100 타임라인에서 플레이어가 행동 시점을 선택하고, 정확도에 따라 위력이 달라집니다.</p>
+            </div>
+
+            <h3>타이밍 구간별 특성</h3>
+            <div class="timing-bar">
+                <div class="timing-section timing-fast">순발형 (0~33)</div>
+                <div class="timing-section timing-balance">균형형 (34~66)</div>
+                <div class="timing-section timing-power">축적형 (67~100)</div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>🏃 순발형 (0~33)</h3>
+                    <p>빠른 견제, 낮은 위력</p>
+                    <p><strong>특징:</strong> 선제권 확보</p>
+                </div>
+                <div class="stat-card">
+                    <h3>⚖️ 균형형 (34~66)</h3>
+                    <p>안정적 데미지</p>
+                    <p><strong>특징:</strong> 무난한 성능</p>
+                </div>
+                <div class="stat-card">
+                    <h3>💥 축적형 (67~100)</h3>
+                    <p>높은 위력</p>
+                    <p><strong>특징:</strong> 준비 시간 필요</p>
+                </div>
+            </div>
+
+            <h3>타이밍 정확도 보정</h3>
+            <div class="code-block">
+완벽 (목표점 ±2): +100% 위력 (50pt 소모)
+우수 (목표점 ±5): +50% 위력 (30pt 소모)
+보통 (목표점 ±10): +0% 위력 (10pt 소모)
+실패 (범위 밖): -50% 위력
+            </div>
+
+            <div class="warning-box">
+                <h3>⚠️ 타이밍 포인트 관리</h3>
+                <p>매턴 100~150pt가 제공되며, 모든 캐릭터가 완벽 타이밍을 사용할 수는 없습니다. 전략적 선택이 필요합니다!</p>
+                <p>여분 포인트는 다음 턴으로 이월 가능 (최대 50pt)</p>
+            </div>
+        </div>
+
+        <!-- 충돌 시스템 -->
+        <div id="collision" class="content-section">
+            <h2>⚔️ 충돌 시스템이란?</h2>
+            
+            <div class="highlight-box">
+                <h3>핵심 개념</h3>
+                <p><strong>"모든 공격은 충돌"</strong></p>
+                <p>기존의 우연한 타이밍 겹침이 아닌, 의도적 타겟팅이 자동으로 충돌 상황을 생성합니다.</p>
+            </div>
+
+            <h3>충돌 발생 조건</h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>🎯 직접 타겟팅</h3>
+                    <p>A가 B를 공격</p>
+                    <p>→ A vs B 충돌</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🛡️ 인터셉트</h3>
+                    <p>A가 C를 공격하는데 B가 방해</p>
+                    <p>→ A vs B 충돌</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🚫 통제권 침범</h3>
+                    <p>A가 B의 ZoC를 통과</p>
+                    <p>→ A vs B 충돌</p>
+                </div>
+            </div>
+
+            <h3>인터셉트 메커니즘</h3>
+            <div class="example-box">
+                <h3>📍 실전 예시</h3>
+                <div class="battle-grid">
+                    <div class="grid-cell ally">■</div>
+                    <div class="grid-cell neutral">→</div>
+                    <div class="grid-cell neutral">→</div>
+                    <div class="grid-cell neutral">→</div>
+                    <div class="grid-cell neutral">→</div>
+                    <div class="grid-cell enemy">★</div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell enemy">▲</div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                    <div class="grid-cell neutral"></div>
+                </div>
+                <p>■(아군)이 ★(적)을 공격하려 할 때, ▲(적)가 연결선상에 있으면 인터셉트 기회가 발생합니다.</p>
+                <p>▲가 인터셉트를 선택하면 ■ vs ▲ 충돌이 먼저 발생하고, ■이 승리해야만 원래 목표를 공격할 수 있습니다.</p>
+            </div>
+        </div>
+
+        <!-- 속도 & 이동 -->
+        <div id="speed" class="content-section">
+            <h2>🏃 속도 & 이동 시스템이란?</h2>
+            
+            <div class="highlight-box">
+                <h3>핵심 개념</h3>
+                <p><strong>속도 = 움직일 수 있는 칸</strong></p>
+                <p>속도가 높을수록 더 멀리 이동할 수 있지만, 이동할수록 타이밍 정확도에 페널티가 발생합니다.</p>
+            </div>
+
+            <h3>속도별 특성</h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>🛡️ 속도 1 (탱커)</h3>
+                    <p>1턴 1칸 이동</p>
+                    <p>이동 비용: 15pt/칸</p>
+                    <p><strong>특수:</strong> 강력한 ZoC, 거점고수</p>
+                </div>
+                <div class="stat-card">
+                    <h3>⚖️ 속도 2 (밸런서)</h3>
+                    <p>1턴 2칸 이동</p>
+                    <p>이동 비용: 8pt/칸</p>
+                    <p><strong>특수:</strong> 유연한 대응력</p>
+                </div>
+                <div class="stat-card">
+                    <h3>⚡ 속도 3 (딜러)</h3>
+                    <p>1턴 3칸 이동</p>
+                    <p>이동 비용: 5pt/칸</p>
+                    <p><strong>특수:</strong> 기습, 회피기동</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🌪️ 속도 4+ (암살자)</h3>
+                    <p>1턴 4칸+ 이동</p>
+                    <p>이동 비용: 3pt/칸</p>
+                    <p><strong>특수:</strong> 연속이동, 초고기동</p>
+                </div>
+            </div>
+
+            <h3>이동 페널티</h3>
+            <div class="code-block">
+이동 안함: +1단계 타이밍 정확도 보정
+1칸 이동: 영향 없음
+2칸 이동: -1단계 타이밍 정확도
+3칸 이상: -2단계 타이밍 정확도
+            </div>
+
+            <div class="example-box">
+                <h3>💡 전략 팁</h3>
+                <p><strong>잔여 이동력 활용:</strong> 이동하지 않은 남은 이동력으로 타이밍 정확도 보정, 회피 확률 증가, 다음 턴 이동력 누적(최대 1칸) 가능</p>
+                <p><strong>이동 공격(Charge):</strong> 2칸 이상 이동 후 공격하면 위력 증가하지만 실패시 추가 피해 위험</p>
+            </div>
+        </div>
+
+        <!-- ZoC 시스템 -->
+        <div id="zoc" class="content-section">
+            <h2>🛡️ 통제권(Zone of Control)이란?</h2>
+            
+            <div class="highlight-box">
+                <h3>핵심 개념</h3>
+                <p><strong>ZoC = 유닛이 통제하는 범위</strong></p>
+                <p>각 유닛은 자신의 역할에 따라 다른 범위를 통제하며, 이 범위 내에서 인터셉트가 가능합니다.</p>
+            </div>
+
+            <h3>역할별 통제 범위</h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>🛡️ 전열 탱커 (속도 1)</h3>
+                    <p><strong>3×3 범위 완전 통제</strong></p>
+                    <p>모든 방향 인터셉트 가능</p>
+                    <div class="zoc-grid">
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-unit">T</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>⚖️ 중열 밸런서 (속도 2)</h3>
+                    <p><strong>십자 범위 통제</strong></p>
+                    <p>직선 방향만 인터셉트</p>
+                    <div class="zoc-grid">
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-unit">B</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>⚡ 후열 딜러 (속도 3+)</h3>
+                    <p><strong>직선 범위 통제</strong></p>
+                    <p>정면 일직선만 인터셉트</p>
+                    <div class="zoc-grid">
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-controlled">■</div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-unit">D</div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                        <div class="zoc-cell zoc-empty"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h3>⚠️ 통제권 겹침 효과</h3>
+                <p>복수 유닛이 같은 목표를 노릴 때:</p>
+                <ul>
+                    <li>먼저 공격자들끼리 충돌</li>
+                    <li>승자가 원래 목표와 2차 충돌</li>
+                    <li>포지셔닝으로 충돌 상대 조작 가능</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 9속성 시스템 -->
+        <div id="attributes" class="content-section">
+            <h2>🔥 9속성 시스템이란?</h2>
+            
+            <div class="highlight-box">
+                <h3>핵심 개념</h3>
+                <p><strong>9가지 속성의 상호작용</strong></p>
+                <p>각 속성은 고유한 특성을 가지며, 조합을 통해 더 강력한 공명 효과를 발휘할 수 있습니다.</p>
+            </div>
+
+            <h3>기본 속성</h3>
+            <div class="attribute-grid">
+                <div class="attribute-card">
+                    <div class="attribute-icon fire">🔥</div>
+                    <h4>화(火)</h4>
+                    <p>공격적, 지속피해</p>
+                    <p>화상, 방어력 감소</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon water">💧</div>
+                    <h4>수(水)</h4>
+                    <p>방어적, 회복</p>
+                    <p>회복, 정화, 상태저항</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon energy">⚡</div>
+                    <h4>기(氣)</h4>
+                    <p>축적형 강화</p>
+                    <p>기력 누적으로 위력 증가</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon earth">🌍</div>
+                    <h4>지(地)</h4>
+                    <p>방어, 안정성</p>
+                    <p>방어력 증가, 보호막</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon thunder">⚡</div>
+                    <h4>뇌(雷)</h4>
+                    <p>연쇄, 방해</p>
+                    <p>연쇄피해, 행동방해</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon dark">🌑</div>
+                    <h4>암(暗)</h4>
+                    <p>약화, 치명타</p>
+                    <p>디버프, 크리티컬 증가</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon light">☀️</div>
+                    <h4>빛(光)</h4>
+                    <p>관통, 고정피해</p>
+                    <p>방어무시, 고정데미지</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon force">💪</div>
+                    <h4>힘(力)</h4>
+                    <p>파괴, 관통</p>
+                    <p>속성무시, 보호막파괴</p>
+                </div>
+                <div class="attribute-card">
+                    <div class="attribute-icon connection">🔗</div>
+                    <h4>인(因)</h4>
+                    <p>연결, 반사</p>
+                    <p>피해반사, 상태복사</p>
+                </div>
+            </div>
+
+            <h3>2차 공명 조합</h3>
+            <div class="example-box">
+                <h3>💫 강력한 조합 효과</h3>
+                <div class="code-block">
+화 + 풍 = 업화: 강화된 화상
+화 + 지 = 용암: 지속피해 + 취약
+화 + 뇌 = 플라즈마: 가중치있는 출혈
+
+수 + 지 = 진흙: 속도 대폭 감소
+수 + 뇌 = 감전: n턴간 행동불가
+
+풍 + 지 = 모래폭풍: 명중률 감소
+지 + 뇌 = 자기장: 반사데미지
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h3>🌟 3차 공명 (대공명)</h3>
+                <p>특정 순서로 3속성을 연계하면 특수 효과가 발동됩니다. 매우 강력하지만 조건이 까다롭습니다!</p>
+            </div>
+        </div>
+
+        <!-- 상태이상 -->
+        <div id="status" class="content-section">
+            <h2>💫 상태이상 시스템이란?</h2>
+            
+            <div class="highlight-box">
+                <h3>핵심 개념</h3>
+                <p><strong>지속적인 전투 상황 변화</strong></p>
+                <p>디버프, 버프, 특수상태가 전투의 흐름을 크게 바꿀 수 있습니다.</p>
+            </div>
+
+            <h3>주요 상태이상</h3>
+            <div class="status-effects">
+                <div class="status-card debuff">
+                    <h4>🩸 출혈</h4>
+                    <p>행동시 위력만큼 피해, 위력 감소</p>
+                </div>
+                <div class="status-card debuff">
+                    <h4>🔥 화상</h4>
+                    <p>턴종료시 고정피해, 발동시 완전제거</p>
+                </div>
+                <div class="status-card debuff">
+                    <h4>🧪 중독</h4>
+                    <p>턴당 최대HP 비례 피해</p>
+                </div>
+                <div class="status-card debuff">
+                    <h4>🧊 빙결</h4>
+                    <p>1턴 행동불가, 받는피해 증가</p>
+                </div>
+                <div class="status-card buff">
+                    <h4>⚡ 가속</h4>
+                    <p>타이밍 구간 +10</p>
+                </div>
+                <div class="status-card buff">
+                    <h4>🎯 집중</h4>
+                    <p>타이밍 정확도 +1단계</p>
+                </div>
+                <div class="status-card buff">
+                    <h4>💪 강화</h4>
+                    <p>공격력 +위력×10%</p>
+                </div>
+                <div class="status-card buff">
+                    <h4>🛡️ 보호막</h4>
+                    <p>피해 흡수</p>
+                </div>
+                <div class="status-card special">
+                    <h4>😱 공포</h4>
+                    <p>n% 확률로 행동 취소</p>
+                </div>
+                <div class="status-card special">
+                    <h4>😵 혼란</h4>
+                    <p>n% 확률로 아군공격</p>
+                </div>
+                <div class="status-card special">
+                    <h4>💀 시한</h4>
+                    <p>HP n% 이하시 즉사</p>
+                </div>
+                <div class="status-card special">
+                    <h4>🔄 부활</h4>
+                    <p>사망시 1회 50% HP 부활</p>
+                </div>
+            </div>
+
+            <h3>심화 상태이상 (조합 효과)</h3>
+            <div class="example-box">
+                <h3>🔥 강력한 조합 상태</h3>
+                <p><strong>출혈 + 중독 = "부패":</strong> HP 회복 불가 + 출혈 피해량이 치명타로 적용</p>
+                <p><strong>화상 + 빙결 = "열화충격":</strong> 즉시 최대 HP의 n% 피해 + 이번 턴 동안 기절</p>
+                <p><strong>마비 + 속박 = "완전마비":</strong> 1턴간 행동 불가 + 받는 피해 +50%</p>
+            </div>
+        </div>
+
+        <!-- 진형 & 포지션 -->
+        <div id="formation" class="content-section">
+            <h2>📐 진형 & 포지션이란?</h2>
+            
+            <div class="highlight-box">
+                <h3>핵심 개념</h3>
+                <p><strong>위치가 곧 전략</strong></p>
+                <p>캐릭터를 어디에 배치하느냐에 따라 받는 피해와 주는 피해가 달라집니다.</p>
+            </div>
+
+            <h3>진형별 효과</h3>
+            <div class="formation-display">
+                <div class="formation-row back-row">
+                    <span>후열: 서포터/원거리 딜러</span>
+                    <span>받는피해 +20%, 주는피해 +15%</span>
+                </div>
+                <div class="formation-row mid-row">
+                    <span>중열: 밸런서/하이브리드</span>
+                    <span>균형잡힌 능력</span>
+                </div>
+                <div class="formation-row front-row">
+                    <span>전열: 탱커/근접 딜러</span>
+                    <span>받는피해 -20%, 방어스킬 강화</span>
+                </div>
+            </div>
+
+            <h3>진형 보너스</h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>🛡️ 전열진형</h3>
+                    <p>전열 3명 배치</p>
+                    <p><strong>효과:</strong> 전체 방어력 +50%</p>
+                </div>
+                <div class="stat-card">
+                    <h3>⚖️ 밸런스진형</h3>
+                    <p>각 열 2명씩 배치</p>
+                    <p><strong>효과:</strong> 속성공명 확률 +50%</p>
+                </div>
+                <div class="stat-card">
+                    <h3>💥 유리대포진형</h3>
+                    <p>전열 1명, 후열 5명</p>
+                    <p><strong>효과:</strong> 피해강화 2배</p>
+                </div>
+            </div>
+
+            <h3>위치별 충돌 효과</h3>
+            <div class="status-effects">
+                <div class="status-card buff">
+                    <h4>🛡️ 전열 충돌</h4>
+                    <p><strong>승리:</strong> 적을 뒤로 밀어내기</p>
+                    <p><strong>패배:</strong> 자신이 뒤로 밀려남</p>
+                    <p><strong>무승부:</strong> 양쪽 모두 경직</p>
+                </div>
+                <div class="status-card special">
+                    <h4>⚖️ 중열 충돌</h4>
+                    <p><strong>승리:</strong> 적의 다음 행동 방해</p>
+                    <p><strong>패배:</strong> 자신의 다음 공격력 -30%</p>
+                    <p><strong>무승부:</strong> 양쪽 모두 속성 약화</p>
+                </div>
+                <div class="status-card debuff">
+                    <h4>🏹 후열 충돌</h4>
+                    <p><strong>승리:</strong> 관통피해 (후방 적에게도 50% 피해)</p>
+                    <p><strong>패배:</strong> 다음 턴 행동불가</p>
+                    <p><strong>무승부:</strong> 양쪽 모두 정확도 저하</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 실전 예시 -->
+        <div id="examples" class="content-section">
+            <h2>🎯 실전 예시</h2>
+            
+            <div class="highlight-box">
+                <h3>상황 설정</h3>
+                <p><strong>6×4 타일맵</strong></p>
+                <p>■: 아군딜러(속도3), ★: 적보스(속도1)</p>
+                <p>▲: 아군탱커(속도1), ◆: 적탱커(속도2)</p>
+                <p>타이밍 포인트: 120</p>
+            </div>
+
+            <div class="battle-grid">
+                <div class="grid-cell neutral">A</div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral">B</div>
+                <div class="grid-cell neutral">A</div>
+                <div class="grid-cell ally">■</div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell enemy">★</div>
+                <div class="grid-cell neutral">B</div>
+                <div class="grid-cell neutral">A</div>
+                <div class="grid-cell ally">▲</div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell enemy">◆</div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral">B</div>
+                <div class="grid-cell neutral">A</div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral"></div>
+                <div class="grid-cell neutral">B</div>
+            </div>
+
+            <h3>전략 옵션</h3>
+            
+            <div class="example-box">
+                <h3>🛡️ A. 정면 돌파</h3>
+                <p><strong>계획:</strong></p>
+                <ul>
+                    <li>▲가 ◆와 정면충돌 (완벽 타이밍 50pt)</li>
+                    <li>■은 대기하며 포인트 절약 (보통 10pt)</li>
+                </ul>
+                <p><strong>결과:</strong> 안정적이지만 시간 소요, ◆ 제거 후 ★와 안전한 1대1</p>
+            </div>
+
+            <div class="example-box">
+                <h3>⚡ B. 기동전</h3>
+                <p><strong>계획:</strong></p>
+                <ul>
+                    <li>■이 3칸 상단 우회 이동 (15pt)</li>
+                    <li>원거리에서 ★ 공격 (우수 30pt)</li>
+                    <li>▲는 견제용 배치 (보통 10pt)</li>
+                </ul>
+                <p><strong>결과:</strong> ◆의 인터셉트 범위 회피, 빠른 결정전 가능</p>
+                <p><strong>리스크:</strong> 이동 페널티로 정확도 하락</p>
+            </div>
+
+            <div class="example-box">
+                <h3>🎭 C. 미끼 작전</h3>
+                <p><strong>계획:</strong></p>
+                <ul>
+                    <li>■이 1칸만 이동 (5pt)</li>
+                    <li>잔여 이동력으로 타이밍 보정 (+2단계)</li>
+                    <li>◆를 유인하여 ▲ 사거리로 끌어들임</li>
+                </ul>
+                <p><strong>결과:</strong> 속도 차이를 역이용한 함정, 포인트 효율적 활용</p>
+            </div>
+
+            <div class="warning-box">
+                <h3>💡 핵심 포인트</h3>
+                <ul>
+                    <li><strong>타이밍 포인트 관리:</strong> 한정된 포인트를 어떻게 분배할지 결정</li>
+                    <li><strong>속도 활용:</strong> 빠른 유닛의 기동성 vs 느린 유닛의 안정성</li>
+                    <li><strong>포지셔닝:</strong> ZoC와 인터셉트를 고려한 위치 선택</li>
+                    <li><strong>리스크 관리:</strong> 공격적 전략과 안전한 전략의 균형</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // 모든 섹션 숨기기
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // 모든 탭 비활성화
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 선택된 섹션 보여주기
+            document.getElementById(sectionId).classList.add('active');
+
+            // 선택된 탭 활성화
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
